@@ -122,7 +122,7 @@ const FileUpload = () => {
           <CardHeader>
             <CardTitle>File Upload</CardTitle>
             <CardDescription>
-              Supported formats: PDF, DOCX, TXT, MD. Maximum file size: 50MB
+              Supported formats: PDF, DOCX, TXT, MD, PPT, PPTX. Maximum file size: 50MB
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -141,7 +141,7 @@ const FileUpload = () => {
                 type="file"
                 id="file-upload"
                 multiple
-                accept=".pdf,.docx,.txt,.md"
+                accept=".pdf,.docx,.txt,.md,.ppt,.pptx"
                 onChange={handleChange}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
