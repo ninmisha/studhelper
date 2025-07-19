@@ -1,11 +1,22 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import Navbar from "@/components/Navbar";
+import Hero from "@/components/Hero";
+import Features from "@/components/Features";
+import FileUpload from "@/components/FileUpload";
+import Dashboard from "@/components/Dashboard";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <Hero />
+      <div id="features">
+        <Features />
+      </div>
+      <div id="upload">
+        <FileUpload />
+      </div>
+      <div id="dashboard">
+        <Dashboard />
       </div>
     </div>
   );
