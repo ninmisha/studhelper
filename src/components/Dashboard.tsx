@@ -127,7 +127,11 @@ const Dashboard = () => {
                             <span>{material.quizzes} quizzes</span>
                           </div>
                         </div>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => alert('Study feature coming soon!')}
+                        >
                           <Play className="w-4 h-4 mr-1" />
                           Study
                         </Button>
@@ -162,19 +166,35 @@ const Dashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button className="w-full justify-start" variant="outline">
+                <Button 
+                  className="w-full justify-start" 
+                  variant="outline"
+                  onClick={() => window.location.hash = '#upload'}
+                >
                   <BookOpen className="w-4 h-4 mr-2" />
                   Upload New Material
                 </Button>
-                <Button className="w-full justify-start" variant="outline">
+                <Button 
+                  className="w-full justify-start" 
+                  variant="outline"
+                  onClick={() => alert('Flashcards feature coming soon!')}
+                >
                   <Brain className="w-4 h-4 mr-2" />
                   Practice Flashcards
                 </Button>
-                <Button className="w-full justify-start" variant="outline">
+                <Button 
+                  className="w-full justify-start" 
+                  variant="outline"
+                  onClick={() => alert('Quiz feature coming soon!')}
+                >
                   <Clock className="w-4 h-4 mr-2" />
                   Take Quick Quiz
                 </Button>
-                <Button className="w-full justify-start" variant="gradient">
+                <Button 
+                  className="w-full justify-start" 
+                  variant="gradient"
+                  onClick={() => alert('Analytics feature coming soon!')}
+                >
                   <TrendingUp className="w-4 h-4 mr-2" />
                   View Analytics
                 </Button>

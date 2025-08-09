@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Check, Clock, AlertCircle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Trash2, Check, Clock, AlertCircle, Play, Pause, RotateCcw, BarChart3, Timer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,11 +28,73 @@ const TaskManager = () => {
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskPriority, setNewTaskPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Pomodoro Timer State
+  const [timerMode, setTimerMode] = useState<'focus' | 'short' | 'long'>('focus');
+  const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [focusSessionsCompleted, setFocusSessionsCompleted] = useState(0);
+  const [tasksCompletedInSession, setTasksCompletedInSession] = useState(0);
+  
   const { toast } = useToast();
+
+  const timerModes = {
+    focus: { duration: 25 * 60, label: "Focus Sesh" },
+    short: { duration: 5 * 60, label: "Short Break" }, 
+    long: { duration: 30 * 60, label: "Long Break" }
+  };
 
   useEffect(() => {
     fetchTasks();
   }, []);
+
+  // Timer Effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isTimerRunning && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((time) => time - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      handleTimerComplete();
+    }
+    return () => clearInterval(interval);
+  }, [isTimerRunning, timeLeft]);
+
+  const handleTimerComplete = () => {
+    setIsTimerRunning(false);
+    if (timerMode === 'focus') {
+      setFocusSessionsCompleted(prev => prev + 1);
+      toast({
+        title: "Focus session complete!",
+        description: "Time for a break. Great work!",
+      });
+    } else {
+      toast({
+        title: "Break complete!",
+        description: "Ready for another focus session?",
+      });
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const startTimer = () => setIsTimerRunning(true);
+  const pauseTimer = () => setIsTimerRunning(false);
+  const resetTimer = () => {
+    setIsTimerRunning(false);
+    setTimeLeft(timerModes[timerMode].duration);
+  };
+
+  const changeTimerMode = (mode: 'focus' | 'short' | 'long') => {
+    setTimerMode(mode);
+    setTimeLeft(timerModes[mode].duration);
+    setIsTimerRunning(false);
+  };
 
   const fetchTasks = async () => {
     const { data, error } = await supabase
@@ -106,6 +170,9 @@ const TaskManager = () => {
         variant: "destructive",
       });
     } else {
+      if (!completed && timerMode === 'focus') {
+        setTasksCompletedInSession(prev => prev + 1);
+      }
       fetchTasks();
     }
   };
@@ -154,15 +221,96 @@ const TaskManager = () => {
 
   return (
     <section className="py-20">
-      <div className="container mx-auto px-6 max-w-4xl">
+      <div className="container mx-auto px-6 max-w-6xl">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Focus Tasks
+            Focus Tasks & Pomodoro Timer
           </h2>
           <p className="text-xl text-muted-foreground">
-            Stay organized and track your daily to-dos
+            Stay organized, track your daily to-dos, and use the Pomodoro technique to stay focused
           </p>
         </div>
+
+        {/* Pomodoro Timer Section */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Timer className="w-5 h-5" />
+              Pomodoro Timer
+            </CardTitle>
+            <CardDescription>
+              Use different study techniques with timed focus sessions
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center space-y-6">
+              {/* Timer Mode Selector */}
+              <div className="flex gap-2">
+                <Button
+                  variant={timerMode === 'focus' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => changeTimerMode('focus')}
+                >
+                  Focus Sesh
+                </Button>
+                <Button
+                  variant={timerMode === 'short' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => changeTimerMode('short')}
+                >
+                  Short Break
+                </Button>
+                <Button
+                  variant={timerMode === 'long' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => changeTimerMode('long')}
+                >
+                  Long Break
+                </Button>
+              </div>
+
+              {/* Timer Display */}
+              <div className="text-center">
+                <div className="text-6xl font-bold text-foreground mb-4">
+                  {formatTime(timeLeft)}
+                </div>
+                <div className="flex gap-4 justify-center">
+                  {!isTimerRunning ? (
+                    <Button onClick={startTimer} size="lg">
+                      <Play className="w-4 h-4 mr-2" />
+                      Start
+                    </Button>
+                  ) : (
+                    <Button onClick={pauseTimer} size="lg" variant="outline">
+                      <Pause className="w-4 h-4 mr-2" />
+                      Pause
+                    </Button>
+                  )}
+                  <Button onClick={resetTimer} size="lg" variant="outline">
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Reset
+                  </Button>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-6 text-center">
+                <div>
+                  <div className="text-2xl font-bold text-foreground">{tasksCompletedInSession}/{tasks.filter(t => !t.completed).length}</div>
+                  <div className="text-sm text-muted-foreground">Tasks Completed</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-foreground">{focusSessionsCompleted}</div>
+                  <div className="text-sm text-muted-foreground">Focus Sessions Completed</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-foreground">{Math.floor(focusSessionsCompleted * 25 / 60)}h {(focusSessionsCompleted * 25) % 60}m</div>
+                  <div className="text-sm text-muted-foreground">Time Focused</div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="mb-8">
           <CardHeader>
