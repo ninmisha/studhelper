@@ -33,19 +33,48 @@ const StudyGroups = () => {
   }, []);
 
   const fetchGroups = async () => {
-    const { data, error } = await supabase
-      .from('study_groups')
-      .select('*')
-      .order('created_at', { ascending: false });
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Use any type temporarily until Supabase types are updated
+      const { data, error } = await (supabase as any)
+        .from('study_groups')
+        .select(`
+          *,
+          study_group_members (
+            user_id
+          )
+        `)
+        .order('created_at', { ascending: false });
 
-    if (error) {
+      if (error) {
+        toast({
+          title: "Error fetching study groups",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Transform data to match our interface
+      const transformedData = (data || []).map((group: any) => ({
+        id: group.id,
+        name: group.name,
+        description: group.description,
+        subject: group.subject,
+        member_count: group.study_group_members?.length || 0,
+        whatsapp_link: group.whatsapp_link,
+        is_admin: group.created_by === user?.id,
+        created_at: group.created_at
+      }));
+
+      setGroups(transformedData);
+    } catch (error: any) {
       toast({
         title: "Error fetching study groups",
-        description: error.message,
+        description: error.message || "An error occurred",
         variant: "destructive",
       });
-    } else {
-      setGroups(data || []);
     }
   };
 
@@ -65,14 +94,14 @@ const StudyGroups = () => {
       return;
     }
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('study_groups')
       .insert({
         name: newGroupName,
         description: newGroupDescription,
         subject: newGroupSubject,
         whatsapp_link: whatsappLink,
-        admin_id: user.id,
+        created_by: user.id,
       });
 
     if (error) {
@@ -107,7 +136,7 @@ const StudyGroups = () => {
       return;
     }
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('study_group_members')
       .insert({
         group_id: groupId,
